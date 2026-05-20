@@ -1,0 +1,102 @@
+# SimpleBudget Self-Hosting - Backend Stack
+# Usage: docker compose -f deploy/compose.yml up -d
+
+services:
+  postgres:
+    image: supabase/postgres:15
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  migrations:
+    image: postgres:15-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGHOST: postgres
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGDATABASE: postgres
+    volumes:
+      - ../supabase/migrations:/migrations:ro
+      - ./scripts/run-migrations.sh:/run-migrations.sh:ro
+    entrypoint: ["bash", "/run-migrations.sh"]
+    restart: "no"
+
+  postgrest:
+    image: postgrest/postgrest
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+    environment:
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  gotrue:
+    image: supabase/gotrue
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: "0.0.0.0"
+      GOTRUE_API_PORT: "9999"
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres?sslmode=disable
+      GOTRUE_SITE_URL: ${SUPABASE_PUBLIC_URL}
+      GOTRUE_URI_ALLOW_LIST: ""
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_JWT_EXP: "3600"
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9999/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  kong:
+    image: kong:3
+    depends_on:
+      postgrest:
+        condition: service_healthy
+      gotrue:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
+      KONG_PROXY_LISTEN: "0.0.0.0:8000"
+      KONG_LOG_LEVEL: info
+    volumes:
+      - ./kong.yml:/etc/kong/kong.yml:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/ || [ $? -eq 22 ]"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+volumes:
+  pgdata:

@@ -1,3 +1,5 @@
 # Environment files containing secrets
 .env
 deploy/.env
+# dependencies
+/node_modules

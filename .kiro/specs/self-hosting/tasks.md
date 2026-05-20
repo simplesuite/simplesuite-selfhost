@@ -66,8 +66,8 @@ This plan implements self-hosting support for SimpleBudget, enabling backend-onl
 - [x] 4. Checkpoint - Ensure scripts work correctly
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Implement Docker Compose backend stack
-  - [ ] 5.1 Create deploy/compose.yml with backend services
+- [x] 5. Implement Docker Compose backend stack
+  - [x] 5.1 Create deploy/compose.yml with backend services
     - Define Postgres service (supabase/postgres:15) with health check (`pg_isready -U postgres`) and internal port 5432
     - Define PostgREST service (postgrest/postgrest) with health check (HTTP GET `/` returns 200), depends_on migrations completed
     - Define GoTrue service (supabase/gotrue) with health check (HTTP GET `/health` returns 200), depends_on postgres healthy
@@ -82,8 +82,8 @@ This plan implements self-hosting support for SimpleBudget, enabling backend-onl
     - Configure path stripping and any required plugins
     - _Requirements: 1.3_
 
-- [ ] 6. Implement frontend container and compose override
-  - [ ] 6.1 Create deploy/scripts/write-config.sh
+- [x] 6. Implement frontend container and compose override
+  - [x] 6.1 Create deploy/scripts/write-config.sh
     - Validate SUPABASE_PUBLIC_URL is present and non-empty, exit non-zero with error if missing
     - Validate ANON_KEY is present and non-empty, exit non-zero with error if missing
     - Generate `/usr/share/caddy/config.json` with exactly two keys: `supabaseUrl` and `supabaseAnonKey`
@@ -93,19 +93,19 @@ This plan implements self-hosting support for SimpleBudget, enabling backend-onl
     - **Property 6: Config writer produces correct and minimal output**
     - **Validates: Requirements 5.1, 7.1, 7.3**
 
-  - [ ] 6.3 Create deploy/Caddyfile
+  - [x] 6.3 Create deploy/Caddyfile
     - Configure Caddy to listen on port 80
     - Serve static files from `/usr/share/caddy`
     - Implement SPA fallback: `try_files {path} /index.html`
     - _Requirements: 4.3, 4.5_
 
-  - [ ] 6.4 Create Dockerfile (multi-stage build)
+  - [x] 6.4 Create Dockerfile (multi-stage build)
     - Build stage: node:22-alpine, `npm ci`, `npm run build` → `/app/dist`
     - Runtime stage: caddy:2-alpine, copy dist, Caddyfile, and write-config.sh
     - CMD: run write-config.sh then start Caddy
     - _Requirements: 4.1_
 
-  - [ ] 6.5 Create deploy/compose.frontend.yml
+  - [x] 6.5 Create deploy/compose.frontend.yml
     - Define frontend service building from Dockerfile
     - Pass only SUPABASE_PUBLIC_URL and ANON_KEY as environment variables (no private secrets)
     - Expose FRONTEND_PORT (default 8080) mapped to container port 80
@@ -116,11 +116,11 @@ This plan implements self-hosting support for SimpleBudget, enabling backend-onl
     - **Property 9: SPA routing fallback**
     - **Validates: Requirements 4.3**
 
-- [ ] 7. Checkpoint - Ensure Docker configurations are valid
+- [x] 7. Checkpoint - Ensure Docker configurations are valid
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 8. Implement frontend runtime configuration
-  - [ ] 8.1 Create configuration resolver module in frontend
+- [x] 8. Implement frontend runtime configuration
+  - [x] 8.1 Create configuration resolver module in frontend
     - Implement config priority chain: localStorage → config.json → build-time env vars
     - Fetch `config.json` at app initialization; on 404 or parse error, fall back silently with console warning
     - Validate URL format (must be http:// or https://); reject invalid URLs with user-facing error
@@ -131,25 +131,25 @@ This plan implements self-hosting support for SimpleBudget, enabling backend-onl
     - **Property 7: Frontend config priority chain**
     - **Validates: Requirements 5.2, 5.3, 5.4, 6.1, 6.2**
 
-  - [ ] 8.3 Write property test for invalid URL rejection
+  - [x] 8.3 Write property test for invalid URL rejection
     - **Property 8: Invalid URL rejection**
     - **Validates: Requirements 6.4**
 
-  - [ ] 8.4 Wire configuration resolver into supabase-js client initialization
+  - [x] 8.4 Wire configuration resolver into supabase-js client initialization
     - Replace static build-time config with the new resolver module
     - Ensure supabase-js client uses resolved values
     - Ensure existing Vercel deployment still works with build-time env vars as fallback
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 9. Ensure Vercel compatibility
-  - [ ] 9.1 Verify Vercel deployment is unaffected
+- [x] 9. Ensure Vercel compatibility
+  - [x] 9.1 Verify Vercel deployment is unaffected
     - Confirm deploy/, Dockerfile, and docs/self-hosting.md are not referenced in package.json scripts or frontend import graph
     - Confirm no new environment variables are required for Vercel deployment
     - Add vercel.json or framework preset override if needed to prevent Dockerfile auto-detection
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-- [ ] 10. Create self-hosting documentation
-  - [ ] 10.1 Create docs/self-hosting.md
+- [x] 10. Create self-hosting documentation
+  - [x] 10.1 Create docs/self-hosting.md
     - Document backend-only setup procedure (cp .env.example, generate-secrets, docker compose up)
     - Document full self-hosting setup procedure (with compose.frontend.yml)
     - Explain how to connect hosted frontend to self-hosted backend (localStorage config)
@@ -160,7 +160,7 @@ This plan implements self-hosting support for SimpleBudget, enabling backend-onl
     - Recommend Tailscale serve for remote access
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8_
 
-- [ ] 11. Final checkpoint - Ensure all tests pass
+- [x] 11. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

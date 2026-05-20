@@ -1,0 +1,17 @@
+# SimpleBudget Self-Hosting - Frontend Override
+# Usage: docker compose -f deploy/compose.yml -f deploy/compose.frontend.yml up -d
+
+services:
+  frontend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    environment:
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL}
+      - ANON_KEY=${ANON_KEY}
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      kong:
+        condition: service_healthy
+    restart: unless-stopped

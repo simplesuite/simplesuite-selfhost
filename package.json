@@ -1,0 +1,22 @@
+{
+    "name": "simplebudget",
+    "private": true,
+    "version": "0.0.1",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc && vite build",
+        "preview": "vite preview",
+        "test": "vitest run"
+    },
+    "devDependencies": {
+        "fast-check": "^4.8.0",
+        "jsdom": "^25.0.0",
+        "typescript": "^5.7.0",
+        "vite": "^6.0.0",
+        "vitest": "^3.0.0"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.106.1"
+    }
+}
