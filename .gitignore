@@ -1,0 +1,3 @@
+# Environment files containing secrets
+.env
+deploy/.env

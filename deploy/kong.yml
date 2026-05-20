@@ -1,0 +1,18 @@
+_format_version: "3.0"
+
+services:
+  - name: rest
+    url: http://postgrest:3000
+    routes:
+      - name: rest-route
+        paths:
+          - /rest/v1/
+        strip_path: true
+
+  - name: auth
+    url: http://gotrue:9999
+    routes:
+      - name: auth-route
+        paths:
+          - /auth/v1/
+        strip_path: true
