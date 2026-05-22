@@ -8,8 +8,13 @@ This guide covers how to self-host SimpleBudget on your own infrastructure. You 
 ## Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) (v2+)
-- `openssl` and `base64` available on your system (for secret generation)
+- Bash shell (Git Bash on Windows, or native on macOS/Linux)
+- `openssl` and `base64` available in your shell (for secret generation)
 - Git (to clone the repository)
+
+### Windows Users
+
+Run all shell scripts from **Git Bash** (not PowerShell or CMD). The scripts require a Unix-like shell.
 
 ---
 
@@ -34,7 +39,7 @@ cp deploy/.env.example deploy/.env
 
 ```bash
 cd deploy
-./scripts/generate-secrets.sh
+bash scripts/generate-secrets.sh
 cd ..
 ```
 
@@ -54,7 +59,15 @@ This starts Postgres, PostgREST, GoTrue, Kong (API gateway), and runs database m
 docker compose -f deploy/compose.yml ps
 ```
 
-All services should show a `healthy` status. The API gateway is available at `http://localhost:8000` by default.
+All services should show a healthy or exited (for migrations) status. The API gateway is available at `http://localhost:8000` by default.
+
+### 6. Test the API
+
+```bash
+curl http://localhost:8000/rest/v1/
+```
+
+You should get a JSON response listing available tables.
 
 ---
 
@@ -79,7 +92,7 @@ cp deploy/.env.example deploy/.env
 
 ```bash
 cd deploy
-./scripts/generate-secrets.sh
+bash scripts/generate-secrets.sh
 cd ..
 ```
 
@@ -99,21 +112,16 @@ Open `http://localhost:8080` in your browser (or whatever port you configured as
 
 ## Connecting the Hosted Frontend to a Self-Hosted Backend
 
-If you're running backend-only mode, you can point the hosted frontend at your self-hosted backend using localStorage overrides.
+If you're running backend-only mode (no frontend container), you can point the hosted frontend at your self-hosted backend using the app's built-in backend configuration page.
 
 ### Steps
 
 1. Open the hosted SimpleBudget app in your browser.
-2. Open the browser developer tools (F12 or Cmd+Shift+I).
-3. Go to the **Console** tab.
-4. Set your backend URL and anon key:
-
-```javascript
-localStorage.setItem("supabaseUrl", "http://your-server:8000");
-localStorage.setItem("supabaseAnonKey", "your-anon-key-from-env-file");
-```
-
-5. Reload the page. The frontend will now connect to your self-hosted backend.
+2. Navigate from **Login** to **Config Backend** area in the app.
+3. Enter your self-hosted backend URL and anon key:
+   - **URL**: `http://your-server:8000` (your `SUPABASE_PUBLIC_URL`)
+   - **Anon Key**: Your `ANON_KEY` from `deploy/.env`
+4. Save. The frontend will now connect to your self-hosted backend.
 
 ### Finding your ANON_KEY
 
@@ -121,14 +129,23 @@ Your `ANON_KEY` is in the `deploy/.env` file after running `generate-secrets.sh`
 
 ### Reverting to the hosted backend
 
-To switch back to the production Supabase instance:
+Use the same config backend area to clear or reset the custom URL and key. The app will revert to the default production Supabase instance.
 
-```javascript
-localStorage.removeItem("supabaseUrl");
-localStorage.removeItem("supabaseAnonKey");
-```
+---
 
-Reload the page and the frontend will revert to its default configuration.
+## Database Access (pgAdmin)
+
+To connect to the database with pgAdmin or another Postgres client:
+
+| Setting | Value |
+|---------|-------|
+| Host | `localhost` |
+| Port | `5432` |
+| Database | `postgres` |
+| Username | `supabase_admin` |
+| Password | Your `POSTGRES_PASSWORD` from `deploy/.env` |
+
+The `supabase_admin` role is the superuser in the Supabase Postgres image and has full access to all schemas including `auth`.
 
 ---
 
@@ -149,7 +166,7 @@ All configuration is managed through `deploy/.env`. Below is a reference for eve
 |----------|---------|-------------|
 | `SERVICE_ROLE_KEY` | *(generated)* | JWT with the "service_role" role. Has elevated privileges. **Must NEVER be exposed to browser clients.** |
 | `JWT_SECRET` | *(generated)* | Cryptographic secret used to sign `ANON_KEY` and `SERVICE_ROLE_KEY` JWTs. **Must NEVER be exposed to browser clients.** |
-| `POSTGRES_PASSWORD` | *(generated)* | Password for the Postgres database superuser. **Must NEVER be exposed to browser clients.** |
+| `POSTGRES_PASSWORD` | *(generated)* | Password for the Postgres database. Used by all backend services. **Must NEVER be exposed to browser clients.** |
 
 ### Optional
 
@@ -204,12 +221,14 @@ git pull origin main
 For backend-only:
 
 ```bash
-docker compose -f deploy/compose.yml up -d --build
+docker compose -f deploy/compose.yml down
+docker compose -f deploy/compose.yml up -d
 ```
 
 For full self-hosting:
 
 ```bash
+docker compose -f deploy/compose.yml -f deploy/compose.frontend.yml down
 docker compose -f deploy/compose.yml -f deploy/compose.frontend.yml up -d --build
 ```
 
@@ -264,7 +283,7 @@ After setting up Tailscale serve, update `SUPABASE_PUBLIC_URL` in your `deploy/.
    ```bash
    docker compose -f deploy/compose.yml logs postgres
    ```
-2. Ensure `POSTGRES_PASSWORD` is set in `deploy/.env`. Run `./deploy/scripts/generate-secrets.sh` if needed.
+2. Ensure `POSTGRES_PASSWORD` is set in `deploy/.env`. Run `generate-secrets.sh` if needed.
 3. If the data volume is corrupted, remove it and restart (this deletes all data):
    ```bash
    docker compose -f deploy/compose.yml down -v
@@ -286,10 +305,40 @@ After setting up Tailscale serve, update `SUPABASE_PUBLIC_URL` in your `deploy/.
    ```bash
    docker compose -f deploy/compose.yml up -d
    ```
-3. If you need to re-run migrations from scratch, drop the tracking table:
+3. If you need to re-run migrations from scratch, drop the tracking table and wipe the volume:
    ```bash
-   docker compose -f deploy/compose.yml exec postgres psql -U postgres -c "DROP TABLE IF EXISTS schema_migrations;"
-   docker compose -f deploy/compose.yml restart migrations
+   docker compose -f deploy/compose.yml down -v
+   docker compose -f deploy/compose.yml up -d
+   ```
+
+### GoTrue (auth) fails to start
+
+**Symptoms:** `deploy-gotrue-1` shows as unhealthy. Auth requests fail.
+
+**Solutions:**
+
+1. Check GoTrue logs:
+   ```bash
+   docker compose -f deploy/compose.yml logs gotrue
+   ```
+2. Common causes:
+   - **"password authentication failed for user supabase_auth_admin"** — The migration runner didn't set role passwords. Wipe and restart:
+     ```bash
+     docker compose -f deploy/compose.yml down -v
+     docker compose -f deploy/compose.yml up -d
+     ```
+   - **"required key API_EXTERNAL_URL missing value"** — Ensure `SUPABASE_PUBLIC_URL` is set in `.env`.
+
+### CORS errors in browser
+
+**Symptoms:** Browser console shows "Cross-Origin Request Blocked" errors.
+
+**Solutions:**
+
+1. This is handled by the Kong CORS plugin in `deploy/kong.yml`.
+2. If you see a specific header being blocked, add it to the `headers` list in `deploy/kong.yml` and restart Kong:
+   ```bash
+   docker compose -f deploy/compose.yml restart kong
    ```
 
 ### Frontend not loading
@@ -318,7 +367,7 @@ After setting up Tailscale serve, update `SUPABASE_PUBLIC_URL` in your `deploy/.
 
 **Solutions:**
 
-1. This is **expected behavior** on the hosted Vercel frontend — it falls back to build-time env vars.
+1. This is **expected behavior** on the hosted Vercel frontend — it falls back to build-time env vars or localStorage overrides.
 2. For self-hosted frontend, check that `SUPABASE_PUBLIC_URL` and `ANON_KEY` are set in `deploy/.env`:
    ```bash
    grep -E "^(SUPABASE_PUBLIC_URL|ANON_KEY)=" deploy/.env
@@ -327,30 +376,20 @@ After setting up Tailscale serve, update `SUPABASE_PUBLIC_URL` in your `deploy/.
    ```bash
    docker compose -f deploy/compose.yml -f deploy/compose.frontend.yml restart frontend
    ```
-4. Verify config.json is being served:
-   ```bash
-   curl http://localhost:8080/config.json
-   ```
 
-### Kong returns 502 or connection refused
+### Complete reset
 
-**Symptoms:** API requests fail with 502 Bad Gateway.
+If things are in a bad state and you want to start fresh:
 
-**Solutions:**
+```bash
+docker compose -f deploy/compose.yml down -v
+rm deploy/.env
+cp deploy/.env.example deploy/.env
+cd deploy && bash scripts/generate-secrets.sh && cd ..
+docker compose -f deploy/compose.yml up -d
+```
 
-1. Check that PostgREST and GoTrue are healthy:
-   ```bash
-   docker compose -f deploy/compose.yml ps postgrest gotrue
-   ```
-2. Check Kong logs:
-   ```bash
-   docker compose -f deploy/compose.yml logs kong
-   ```
-3. Restart the stack:
-   ```bash
-   docker compose -f deploy/compose.yml down
-   docker compose -f deploy/compose.yml up -d
-   ```
+This removes all data and regenerates all secrets.
 
 ---
 
