@@ -57,7 +57,7 @@ generate_random_password() {
 
 # Base64url encode (no padding)
 base64url_encode() {
-  base64 | tr '+/' '-_' | tr -d '='
+  base64 -w 0 | tr '+/' '-_' | tr -d '='
 }
 
 # Generate a JWT signed with HS256

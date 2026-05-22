@@ -636,3 +636,125 @@ The implementation is complete when:
 - simplebudget primary repo for front end: https://github.com/simplebudgets/simplebudget/
 - production supabase url: https://psdmjjcvaxejxktqwdcm.supabase.co
 - production key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzZG1qamN2YXhlanhrdHF3ZGNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzAzMzA0ODMsImV4cCI6MTk4NTkwNjQ4M30.7Uqw2v3Ny5FvPBRBbbvtcUxJj_ReNDjRBUn6cWlal_o
+
+
+
+
+
+TABLE INFORMATIONS
+Definitions
+table name: budgets
+column_name,data_type,is_nullable,column_default
+recordID,character varying,NO,null
+creatorID,uuid,NO,null
+budgetName,character varying,YES,null
+ 
+table name: categories
+column_name,data_type,is_nullable,column_default
+recordID,character varying,NO,null
+sectionID,character varying,NO,null
+categoryName,character varying,NO,null
+amount,numeric,NO,null
+categoryNote,text,YES,null
+ 
+table name: sections
+column_name,data_type,is_nullable,column_default
+recordID,character varying,NO,null
+sectionName,character varying,NO,null
+budgetID,character varying,NO,null
+sectionType,character varying,NO,null
+sectionYear,numeric,NO,null
+sectionMonth,character varying,NO,null
+ 
+table name: shared
+column_name,data_type,is_nullable,column_default
+recordID,character varying,NO,null
+budgetID,character varying,NO,null
+sharedToID,uuid,NO,null
+ 
+table name: transactions
+column_name,data_type,is_nullable,column_default
+recordID,character varying,NO,null
+budgetID,character varying,NO,null
+categoryID,character varying,YES,null
+amount,numeric,NO,null
+title,character varying,NO,null
+transactionType,character varying,NO,null
+creatorID,uuid,YES,null
+transactionDate,numeric,NO,null
+ 
+table name: users
+column_name,data_type,is_nullable,column_default
+recordID,uuid,NO,null
+fullName,character varying,NO,null
+userType,character varying,NO,null
+
+
+Table Policies:
+schemaname,tablename,policyname,permissive,roles,cmd,qual,with_check
+public,budgets,DELETE -> creators + authenticated ./,PERMISSIVE,{authenticated},DELETE,"( SELECT (auth.uid() = budgets.""creatorID""))",null
+public,budgets,INSERT -> authenticated ./,PERMISSIVE,{authenticated},INSERT,null,true
+public,budgets,SELECT -> authenticated ./,PERMISSIVE,{authenticated},SELECT,true,null
+public,budgets,UPDATE -> creators + authenticated ./,PERMISSIVE,{authenticated},UPDATE,"( SELECT (auth.uid() = budgets.""creatorID""))","( SELECT (auth.uid() = budgets.""creatorID""))"
+public,categories,ALL - creator/shared + authenticated ./,PERMISSIVE,{authenticated},ALL,"((auth.uid() IN ( SELECT budgets.""creatorID""
+   FROM budgets
+  WHERE ((budgets.""recordID"")::text IN ( SELECT sections.""budgetID""
+           FROM sections
+          WHERE ((sections.""recordID"")::text = (categories.""sectionID"")::text))))) OR (auth.uid() IN ( SELECT shared.""sharedToID""
+   FROM shared
+  WHERE ((shared.""budgetID"")::text IN ( SELECT sections.""budgetID""
+           FROM sections
+          WHERE ((sections.""recordID"")::text = (categories.""sectionID"")::text))))))","((auth.uid() IN ( SELECT budgets.""creatorID""
+   FROM budgets
+  WHERE ((budgets.""recordID"")::text IN ( SELECT sections.""budgetID""
+           FROM sections
+          WHERE ((sections.""recordID"")::text = (categories.""sectionID"")::text))))) OR (auth.uid() IN ( SELECT shared.""sharedToID""
+   FROM shared
+  WHERE ((shared.""budgetID"")::text IN ( SELECT sections.""budgetID""
+           FROM sections
+          WHERE ((sections.""recordID"")::text = (categories.""sectionID"")::text))))))"
+public,sections,ALL - creator/shared + authenticated ./,PERMISSIVE,{authenticated},ALL,"((auth.uid() IN ( SELECT budgets.""creatorID""
+   FROM budgets
+  WHERE ((sections.""budgetID"")::text = (sections.""budgetID"")::text))) OR (auth.uid() IN ( SELECT shared.""sharedToID""
+   FROM shared
+  WHERE ((shared.""budgetID"")::text = (shared.""budgetID"")::text))))","((auth.uid() IN ( SELECT budgets.""creatorID""
+   FROM budgets
+  WHERE ((sections.""budgetID"")::text = (sections.""budgetID"")::text))) OR (auth.uid() IN ( SELECT shared.""sharedToID""
+   FROM shared
+  WHERE ((shared.""budgetID"")::text = (shared.""budgetID"")::text))))"
+public,shared,DELETE -> creator + authenticated,PERMISSIVE,{authenticated},DELETE,"(auth.uid() IN ( SELECT budgets.""creatorID""
+   FROM budgets
+  WHERE ((budgets.""recordID"")::text = (shared.""budgetID"")::text)))",null
+public,shared,INSERT -> creator + authenticated,PERMISSIVE,{authenticated},INSERT,null,"(auth.uid() IN ( SELECT budgets.""creatorID""
+   FROM budgets
+  WHERE ((budgets.""recordID"")::text = (shared.""budgetID"")::text)))"
+public,shared,SELECT -> authenticated,PERMISSIVE,{authenticated},SELECT,true,null
+public,shared,UPDATE -> creator + authenticated,PERMISSIVE,{authenticated},UPDATE,"(auth.uid() IN ( SELECT budgets.""creatorID""
+   FROM budgets
+  WHERE ((budgets.""recordID"")::text = (shared.""budgetID"")::text)))","(auth.uid() IN ( SELECT budgets.""creatorID""
+   FROM budgets
+  WHERE ((budgets.""recordID"")::text = (shared.""budgetID"")::text)))"
+public,transactions,ALL -> creator/shared + authenticated ./,PERMISSIVE,{authenticated},ALL,"((auth.uid() IN ( SELECT budgets.""creatorID""
+   FROM budgets
+  WHERE ((budgets.""recordID"")::text = (transactions.""budgetID"")::text))) OR (auth.uid() IN ( SELECT shared.""sharedToID""
+   FROM shared
+  WHERE ((shared.""budgetID"")::text = (shared.""budgetID"")::text))))","((auth.uid() IN ( SELECT budgets.""creatorID""
+   FROM budgets
+  WHERE ((budgets.""recordID"")::text = (transactions.""budgetID"")::text))) OR (auth.uid() IN ( SELECT shared.""sharedToID""
+   FROM shared
+  WHERE ((shared.""budgetID"")::text = (shared.""budgetID"")::text))))"
+public,users,INSERT -> authenticated,PERMISSIVE,{public},INSERT,null,true
+public,users,SELECT -> authenticated,PERMISSIVE,{authenticated},SELECT,true,null
+public,users,UPDATE -> creator,PERMISSIVE,{authenticated},UPDATE,"(auth.uid() = ""recordID"")","(auth.uid() = ""recordID"")"
+
+Table Relationships:
+relationships:
+source_table,source_column,target_table,target_column,constraint_name
+transactions,creatorID,users,recordID,transactions_creatorID_fkey
+shared,budgetID,budgets,recordID,shared_budgetID_fkey
+shared,sharedToID,users,recordID,shared_sharedToID_fkey
+budgets,creatorID,users,recordID,budgets_creatorID_fkey
+categories,sectionID,sections,recordID,categories_sectionID_fkey
+transactions,budgetID,budgets,recordID,transactions_budgetID_fkey
+sections,budgetID,budgets,recordID,sections_budgetID_fkey
+transactions,categoryID,categories,recordID,transactions_categoryID_fkey

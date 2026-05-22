@@ -3,7 +3,7 @@
 
 services:
   postgres:
-    image: supabase/postgres:15
+    image: supabase/postgres:15.8.1.085
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: postgres
@@ -25,41 +25,37 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       PGHOST: postgres
       PGPORT: "5432"
-      PGUSER: postgres
+      PGUSER: supabase_admin
       PGDATABASE: postgres
     volumes:
       - ../supabase/migrations:/migrations:ro
       - ./scripts/run-migrations.sh:/run-migrations.sh:ro
-    entrypoint: ["bash", "/run-migrations.sh"]
+    entrypoint: ["sh", "/run-migrations.sh"]
     restart: "no"
 
   postgrest:
-    image: postgrest/postgrest
+    image: postgrest/postgrest:v14.8
     depends_on:
       migrations:
         condition: service_completed_successfully
     environment:
-      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@postgres:5432/postgres
       PGRST_DB_SCHEMAS: public
       PGRST_DB_ANON_ROLE: anon
       PGRST_JWT_SECRET: ${JWT_SECRET}
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/ || exit 1"]
-      interval: 5s
-      timeout: 5s
-      retries: 12
     restart: unless-stopped
 
   gotrue:
-    image: supabase/gotrue
+    image: supabase/gotrue:v2.186.0
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
     environment:
       GOTRUE_API_HOST: "0.0.0.0"
       GOTRUE_API_PORT: "9999"
+      API_EXTERNAL_URL: ${SUPABASE_PUBLIC_URL}/auth/v1
       GOTRUE_DB_DRIVER: postgres
-      GOTRUE_DB_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres?sslmode=disable
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@postgres:5432/postgres?sslmode=disable
       GOTRUE_SITE_URL: ${SUPABASE_PUBLIC_URL}
       GOTRUE_URI_ALLOW_LIST: ""
       GOTRUE_DISABLE_SIGNUP: "false"
@@ -76,10 +72,10 @@ services:
     restart: unless-stopped
 
   kong:
-    image: kong:3
+    image: kong/kong:3.9.1
     depends_on:
       postgrest:
-        condition: service_healthy
+        condition: service_started
       gotrue:
         condition: service_healthy
     ports:

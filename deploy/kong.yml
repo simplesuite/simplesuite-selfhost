@@ -1,5 +1,38 @@
 _format_version: "3.0"
 
+plugins:
+  - name: cors
+    config:
+      origins:
+        - "*"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      headers:
+        - Accept
+        - Authorization
+        - Content-Type
+        - Prefer
+        - apikey
+        - x-client-info
+        - x-supabase-api-version
+        - content-profile
+        - accept-profile
+        - x-upsert
+        - range
+        - if-match
+        - if-none-match
+      exposed_headers:
+        - Content-Range
+        - X-Total-Count
+        - content-profile
+      credentials: false
+      max_age: 3600
+
 services:
   - name: rest
     url: http://postgrest:3000
