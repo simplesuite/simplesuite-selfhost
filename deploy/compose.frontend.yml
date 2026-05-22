@@ -4,8 +4,8 @@
 services:
   frontend:
     build:
-      context: ..
-      dockerfile: deploy/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     environment:
       - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL}
       - ANON_KEY=${ANON_KEY}

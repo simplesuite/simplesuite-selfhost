@@ -1,8 +1,8 @@
 #!/bin/sh
 # write-config.sh
-# Generates runtime config.json from environment variables for the frontend container.
+# Generates runtime config.js from environment variables for the frontend container.
 # Runs inside the Caddy container at startup before Caddy begins serving.
-# Output: /usr/share/caddy/config.json
+# Output: /usr/share/caddy/config.js
 
 set -eu
 
@@ -18,13 +18,13 @@ if [ -z "${ANON_KEY:-}" ]; then
   exit 1
 fi
 
-# --- Generate config.json ---
+# --- Generate config.js ---
 
-cat > /usr/share/caddy/config.json <<EOF
-{
-  "supabaseUrl": "${SUPABASE_PUBLIC_URL}",
-  "supabaseAnonKey": "${ANON_KEY}"
-}
+cat > /usr/share/caddy/config.js <<EOF
+window.__SUPABASE_CONFIG__ = {
+  url: "${SUPABASE_PUBLIC_URL}",
+  key: "${ANON_KEY}"
+};
 EOF
 
-echo "config.json written to /usr/share/caddy/config.json"
+echo "config.js written to /usr/share/caddy/config.js"

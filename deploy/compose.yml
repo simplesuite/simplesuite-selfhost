@@ -90,10 +90,11 @@ services:
     volumes:
       - ./kong.yml:/etc/kong/kong.yml:ro
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/ || [ $? -eq 22 ]"]
+      test: ["CMD", "kong", "health"]
       interval: 5s
       timeout: 5s
       retries: 12
+      start_period: 15s
     restart: unless-stopped
 
 volumes:
