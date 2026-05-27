@@ -1,6 +1,9 @@
-# SimpleBudget — Self-Hosting
+<p align="center">
+<img width="250" height="250" alt="logo" src="https://github.com/user-attachments/assets/57426cb2-3e99-45ba-918c-8d79126c6571" />
+</p>
 
-Deploy your own SimpleBudget backend (and optionally the frontend) with Docker Compose.
+# simpleBudget — Self-Hosting
+Deploy your own simpleBudget backend (and optionally the frontend) with Docker Compose.
 
 > **Two deployment modes:**
 > - **Backend-only** — Self-host the database and API. Use the hosted frontend at [simplebudget.vercel.app](https://simplebudget.vercel.app).
