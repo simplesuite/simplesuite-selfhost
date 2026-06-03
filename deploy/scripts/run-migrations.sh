@@ -7,7 +7,7 @@ set -eu
 
 PGHOST="${PGHOST:-postgres}"
 PGPORT="${PGPORT:-5432}"
-PGUSER="${PGUSER:-supabase_admin}"
+PGUSER="${PGUSER:-postgres}"
 PGDATABASE="${PGDATABASE:-postgres}"
 MIGRATIONS_DIR="${MIGRATIONS_DIR:-/migrations}"
 
@@ -32,13 +32,9 @@ if [ "$attempts" -ge "$max_attempts" ]; then
   exit 1
 fi
 
-# --- Set role passwords for GoTrue and PostgREST ---
-echo "Setting internal role passwords..."
-psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -v ON_ERROR_STOP=1 <<SQL
-ALTER ROLE supabase_auth_admin WITH PASSWORD '${POSTGRES_PASSWORD}';
-ALTER ROLE authenticator WITH PASSWORD '${POSTGRES_PASSWORD}';
-SQL
-echo "Role passwords configured."
+# --- Note: Role passwords (authenticator, supabase_auth_admin) are set by
+# the supabase/postgres image during initialization using POSTGRES_PASSWORD.
+# No manual ALTER ROLE needed here.
 
 # --- Create app_schema_migrations table ---
 psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -v ON_ERROR_STOP=1 <<'SQL'

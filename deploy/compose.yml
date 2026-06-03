@@ -12,6 +12,7 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./scripts/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 5s
@@ -28,7 +29,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       PGHOST: postgres
       PGPORT: "5432"
-      PGUSER: supabase_admin
+      PGUSER: postgres
       PGDATABASE: postgres
     volumes:
       - ../supabase/migrations:/migrations:ro
