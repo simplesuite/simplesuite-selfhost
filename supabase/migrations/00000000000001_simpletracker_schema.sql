@@ -527,6 +527,7 @@ CREATE POLICY "notes_shared_delete"
 -- RLS Policies: tasks
 -- =============================================================================
 
+DROP POLICY IF EXISTS "tasks_select" ON public.tasks;
 CREATE POLICY "tasks_select"
   ON public.tasks FOR SELECT
   TO authenticated
@@ -546,6 +547,7 @@ CREATE POLICY "tasks_select"
     ))
   );
 
+DROP POLICY IF EXISTS "tasks_insert" ON public.tasks;
 CREATE POLICY "tasks_insert"
   ON public.tasks FOR INSERT
   TO authenticated
@@ -568,6 +570,7 @@ CREATE POLICY "tasks_insert"
     )
   );
 
+DROP POLICY IF EXISTS "tasks_update" ON public.tasks;
 CREATE POLICY "tasks_update"
   ON public.tasks FOR UPDATE
   TO authenticated
@@ -590,6 +593,7 @@ CREATE POLICY "tasks_update"
     ))
   );
 
+DROP POLICY IF EXISTS "tasks_delete" ON public.tasks;
 CREATE POLICY "tasks_delete"
   ON public.tasks FOR DELETE
   TO authenticated
