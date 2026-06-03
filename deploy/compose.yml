@@ -1,4 +1,5 @@
-# SimpleBudget Self-Hosting - Backend Stack
+# SimpleSuite Self-Hosting - Backend Stack
+# Supports: simpleBudget + simpleTracker
 # Usage: docker compose -f deploy/compose.yml up -d
 
 services:

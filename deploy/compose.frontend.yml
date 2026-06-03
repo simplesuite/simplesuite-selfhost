@@ -1,11 +1,17 @@
-# SimpleBudget Self-Hosting - Frontend Override
+# SimpleSuite Self-Hosting - Frontend Override
 # Usage: docker compose -f deploy/compose.yml -f deploy/compose.frontend.yml up -d
+#
+# Set FRONTEND_APP in .env to choose which app to deploy:
+#   FRONTEND_APP=simplebudget  (default)
+#   FRONTEND_APP=simpletracker
 
 services:
   frontend:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        FRONTEND_APP: ${FRONTEND_APP:-simplebudget}
     environment:
       - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL}
       - ANON_KEY=${ANON_KEY}

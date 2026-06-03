@@ -1,0 +1,40 @@
+# SimpleSuite Self-Hosting - All Frontends
+# Usage: docker compose -f deploy/compose.yml -f deploy/compose.allfrontends.yml up -d
+#
+# Hosts both simpleBudget and simpleTracker simultaneously.
+# Ports (configurable via .env):
+#   simpleBudget: SIMPLEBUDGET_PORT (default 8080)
+#   simpleTracker: SIMPLETRACKER_PORT (default 8081)
+
+services:
+  frontend-simplebudget:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        FRONTEND_APP: simplebudget
+    environment:
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL}
+      - ANON_KEY=${ANON_KEY}
+    ports:
+      - "${SIMPLEBUDGET_PORT:-8080}:80"
+    depends_on:
+      kong:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend-simpletracker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        FRONTEND_APP: simpletracker
+    environment:
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL}
+      - ANON_KEY=${ANON_KEY}
+    ports:
+      - "${SIMPLETRACKER_PORT:-8081}:80"
+    depends_on:
+      kong:
+        condition: service_healthy
+    restart: unless-stopped

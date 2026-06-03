@@ -2,12 +2,23 @@
 <img width="250" height="250" alt="logo" src="https://github.com/user-attachments/assets/57426cb2-3e99-45ba-918c-8d79126c6571" />
 </p>
 
-# simpleBudget — Self-Hosting
-Deploy your own simpleBudget backend (and optionally the frontend) with Docker Compose.
+# simpleSuite — Self-Hosting
+Deploy your own simpleSuite backend (and optionally the frontend) with Docker Compose. Supports both **simpleBudget** and **simpleTracker**.
 
 > **Two deployment modes:**
-> - **Backend-only** — Self-host the database and API. Use the hosted frontend at [simplebudget.vercel.app](https://simplebudget.vercel.app).
+> - **Backend-only** — Self-host the database and API. Use the hosted frontends at [budget.simplesuite.dev](https://budget.simplesuite.dev) or [tracker.simplesuite.dev](https://tracker.simplesuite.dev).
 > - **Full stack** — Self-host everything, including the frontend served via Caddy.
+
+---
+
+## Supported Apps
+
+| App | Frontend Repo | Hosted URL |
+|-----|---------------|------------|
+| simpleBudget | [simplesuite/simplebudget](https://github.com/simplesuite/simplebudget) | [budget.simplesuite.dev](https://budget.simplesuite.dev) |
+| simpleTracker | [simplesuite/simpletracker](https://github.com/simplesuite/simpletracker) | [tracker.simplesuite.dev](https://tracker.simplesuite.dev) |
+
+Both apps share the same Supabase backend. A single self-hosted instance supports both.
 
 ---
 
@@ -15,8 +26,8 @@ Deploy your own simpleBudget backend (and optionally the frontend) with Docker C
 
 ```bash
 # 1. Clone this repo
-git clone https://github.com/simplebudgets/simplebudget-selfhost.git
-cd simplebudget-selfhost
+git clone https://github.com/simplesuite/simplesuite-selfhost.git
+cd simplesuite-selfhost
 
 # 2. Create and populate your environment file
 cp deploy/.env.example deploy/.env
@@ -25,7 +36,8 @@ cd deploy && bash scripts/generate-secrets.sh && cd ..
 # 3. Start the backend
 docker compose -f deploy/compose.yml up -d
 
-# 4. (Optional) Start with frontend included
+# 4. (Optional) Start with a frontend included
+#    Set FRONTEND_APP in deploy/.env to: simplebudget or simpletracker
 docker compose -f deploy/compose.yml -f deploy/compose.frontend.yml up -d
 ```
 
@@ -48,7 +60,7 @@ The frontend (if enabled) will be at **http://localhost:8080**.
 
 ## Backend-Only Setup
 
-Run your own Supabase-compatible backend while using the hosted frontend.
+Run your own Supabase-compatible backend while using the hosted frontends.
 
 ```bash
 cp deploy/.env.example deploy/.env
@@ -66,6 +78,8 @@ Then open the hosted frontend and use the **Config Backend** page to enter:
 - **URL:** `http://localhost:8000` (or your server's address)
 - **Anon Key:** The `ANON_KEY` value from `deploy/.env`
 
+This works for both simpleBudget and simpleTracker — they share the same backend.
+
 ---
 
 ## Full Self-Hosting
@@ -75,12 +89,29 @@ Run the entire stack — backend and frontend — on your own machine.
 ```bash
 cp deploy/.env.example deploy/.env
 cd deploy && bash scripts/generate-secrets.sh && cd ..
+
+# Edit deploy/.env to set which app to deploy:
+#   FRONTEND_APP=simplebudget   (default)
+#   FRONTEND_APP=simpletracker
+
 docker compose -f deploy/compose.yml -f deploy/compose.frontend.yml up -d
 ```
 
 Open **http://localhost:8080** in your browser.
 
-The frontend container clones the latest [simplebudgets/simplebudget](https://github.com/simplebudgets/simplebudget) source, builds it, and serves it via Caddy. The `config.js` is auto-generated from your `.env` values at container startup — no manual configuration needed.
+The frontend container clones the latest source from the selected app's repo, builds it, and serves it via Caddy. The `config.js` is auto-generated from your `.env` values at container startup — no manual configuration needed.
+
+### Hosting Both Frontends
+
+To self-host both apps simultaneously, use the all-frontends compose file:
+
+```bash
+docker compose -f deploy/compose.yml -f deploy/compose.allfrontends.yml up -d
+```
+
+This starts:
+- simpleBudget at **http://localhost:8080** (configurable via `SIMPLEBUDGET_PORT`)
+- simpleTracker at **http://localhost:8081** (configurable via `SIMPLETRACKER_PORT`)
 
 ---
 
@@ -97,7 +128,10 @@ All config lives in `deploy/.env`. Run `generate-secrets.sh` to auto-fill secret
 | `POSTGRES_PASSWORD` | *(generated)* | **Private** | Database password |
 | `DASHBOARD_USERNAME` | `admin` | Optional | Studio dashboard username |
 | `DASHBOARD_PASSWORD` | *(generated)* | Optional | Studio dashboard password |
-| `FRONTEND_PORT` | `8080` | Frontend | Port for the self-hosted frontend |
+| `FRONTEND_APP` | `simplebudget` | Frontend | Which app to build: `simplebudget` or `simpletracker` |
+| `FRONTEND_PORT` | `8080` | Frontend | Port for single-app mode (`compose.frontend.yml`) |
+| `SIMPLEBUDGET_PORT` | `8080` | Frontend | simpleBudget port for both-apps mode (`compose.allfrontends.yml`) |
+| `SIMPLETRACKER_PORT` | `8081` | Frontend | simpleTracker port for both-apps mode (`compose.allfrontends.yml`) |
 
 ---
 

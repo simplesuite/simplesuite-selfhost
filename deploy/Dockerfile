@@ -5,8 +5,15 @@ RUN apk add --no-cache git
 
 WORKDIR /app
 
-# Clone the latest frontend source
-RUN git clone --depth 1 https://github.com/simplebudgets/simplebudget.git .
+# Choose which frontend to build: "simplebudget" or "simpletracker"
+ARG FRONTEND_APP=simplebudget
+
+# Clone the appropriate frontend source
+RUN if [ "$FRONTEND_APP" = "simpletracker" ]; then \
+      git clone --depth 1 https://github.com/simplesuite/simpletracker.git .; \
+    else \
+      git clone --depth 1 https://github.com/simplesuite/simplebudget.git .; \
+    fi
 
 # Install dependencies and build
 RUN npm ci
