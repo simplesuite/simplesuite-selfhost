@@ -603,6 +603,7 @@ CREATE POLICY "tasks_delete"
 -- RLS Policies: task_subtasks
 -- =============================================================================
 
+DROP POLICY IF EXISTS "task_subtasks_select" ON public.task_subtasks;
 CREATE POLICY "task_subtasks_select"
   ON public.task_subtasks FOR SELECT
   TO authenticated
@@ -622,6 +623,7 @@ CREATE POLICY "task_subtasks_select"
     )
   );
 
+DROP POLICY IF EXISTS "task_subtasks_insert" ON public.task_subtasks;
 CREATE POLICY "task_subtasks_insert"
   ON public.task_subtasks FOR INSERT
   TO authenticated
@@ -641,6 +643,7 @@ CREATE POLICY "task_subtasks_insert"
     )
   );
 
+DROP POLICY IF EXISTS "task_subtasks_update" ON public.task_subtasks;
 CREATE POLICY "task_subtasks_update"
   ON public.task_subtasks FOR UPDATE
   TO authenticated
@@ -675,6 +678,7 @@ CREATE POLICY "task_subtasks_update"
     )
   );
 
+DROP POLICY IF EXISTS "task_subtasks_delete" ON public.task_subtasks;
 CREATE POLICY "task_subtasks_delete"
   ON public.task_subtasks FOR DELETE
   TO authenticated

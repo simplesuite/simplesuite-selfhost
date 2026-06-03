@@ -1,9 +1,13 @@
-#!/bin/sh
-# Set passwords for internal Supabase roles
-# This runs during Postgres initialization via docker-entrypoint-initdb.d
+#!/bin/bash
+# Sets passwords for internal Supabase roles during Postgres container initialization.
+# This runs as the postgres superuser via docker-entrypoint-initdb.d on FIRST START only.
+# Uses POSTGRES_PASSWORD env var which is available from the container environment.
 
-psql -v ON_ERROR_STOP=1 --no-password --no-psqlrc -U supabase_admin -d postgres <<-SQL
-  ALTER ROLE supabase_auth_admin WITH PASSWORD '${POSTGRES_PASSWORD}';
-  ALTER ROLE supabase_storage_admin WITH PASSWORD '${POSTGRES_PASSWORD}';
-  ALTER ROLE authenticator WITH PASSWORD '${POSTGRES_PASSWORD}';
-SQL
+set -eu
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+    ALTER ROLE supabase_auth_admin WITH PASSWORD '${POSTGRES_PASSWORD}';
+    ALTER ROLE authenticator WITH PASSWORD '${POSTGRES_PASSWORD}';
+EOSQL
+
+echo "Internal role passwords configured."
