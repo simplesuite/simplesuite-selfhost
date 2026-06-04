@@ -1,5 +1,5 @@
 <p align="center">
-<img width="250" height="250" alt="logo" src="https://github.com/user-attachments/assets/57426cb2-3e99-45ba-918c-8d79126c6571" />
+<img width="250" height="250" alt="logo" src="https://github.com/user-attachments/assets/753aa8a3-3b44-41e4-af7a-e3dc8cd33e7f" />
 </p>
 
 # simpleSuite — Self-Hosting
