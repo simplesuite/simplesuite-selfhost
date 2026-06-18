@@ -1,15 +1,38 @@
 <p align="center">
-<img width="250" height="250" alt="logo" src="https://github.com/user-attachments/assets/753aa8a3-3b44-41e4-af7a-e3dc8cd33e7f" />
+<img width="250" height="250" alt="simpleSuite logo" src="https://github.com/user-attachments/assets/753aa8a3-3b44-41e4-af7a-e3dc8cd33e7f" />
 </p>
 
-# simpleSuite — Self-Hosting
-Deploy your own simpleSuite backend (and optionally the frontend) with Docker Compose. Supports both **simpleBudget** and **simpleTracker**.
+<h1 align="center">simpleSuite — Self-Hosting</h1>
+
+<p align="center">
+  Deploy your own simpleSuite backend and frontends with Docker Compose. Open-source, self-hostable, and privacy-first.
+</p>
+
+<p align="center">
+  <a href="https://github.com/simplesuite/simplesuite-selfhost/blob/main/LICENSE"><img src="https://img.shields.io/github/license/simplesuite/simplesuite-selfhost" alt="License" /></a>
+  <a href="https://github.com/simplesuite/simplesuite-selfhost/stargazers"><img src="https://img.shields.io/github/stars/simplesuite/simplesuite-selfhost" alt="Stars" /></a>
+  <a href="https://github.com/simplesuite/simplesuite-selfhost/issues"><img src="https://img.shields.io/github/issues/simplesuite/simplesuite-selfhost" alt="Issues" /></a>
+</p>
+
+---
+
+## What is this?
+
+This repo contains everything needed to self-host the simpleSuite ecosystem — a free, open-source alternative to hosted productivity and budgeting apps. Run your own Supabase-compatible backend (and optionally the frontends) on your own hardware with a single `docker compose up`.
 
 > **Two deployment modes:**
 > - **Backend-only** — Self-host the database and API. Use the hosted frontends at [budget.simplesuite.dev](https://budget.simplesuite.dev) or [tracker.simplesuite.dev](https://tracker.simplesuite.dev).
 > - **Full stack** — Self-host everything, including the frontend served via Caddy.
 
 ---
+
+## An Open-Source Alternative To
+
+- Supabase Cloud (managed)
+- Firebase
+- Appwrite
+- PocketBase
+- Hosted YNAB / Todoist / Notion backends
 
 ## Supported Apps
 
@@ -275,6 +298,10 @@ docker compose -f deploy/compose.yml up -d
 
 ---
 
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request.
+
 ## License
 
-See [LICENSE](LICENSE).
+This project is licensed under the [GNU AGPL v3](LICENSE).
